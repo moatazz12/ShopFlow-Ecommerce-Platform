@@ -1,0 +1,573 @@
+{
+  "info": {
+    "_postman_id": "shopflow-2026-collection",
+    "name": "ShopFlow API Collection",
+    "description": "Collection Postman complète pour l'API ShopFlow — Spring Boot 3 + JWT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register — Client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prenom\": \"Alice\",\n  \"nom\": \"Martin\",\n  \"email\": \"alice@shopflow.com\",\n  \"password\": \"alice123\",\n  \"role\": \"CUSTOMER\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register — Vendeur",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prenom\": \"Bob\",\n  \"nom\": \"Dupont\",\n  \"email\": \"bob@shopflow.com\",\n  \"password\": \"bob123\",\n  \"role\": \"SELLER\",\n  \"shopName\": \"Boutique Bob\",\n  \"shopDescription\": \"Les meilleurs produits\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "pm.test('Login OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@shopflow.com\",\n  \"password\": \"admin123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛍️ Produits",
+      "item": [
+        {
+          "name": "GET — Liste paginée avec filtres",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=0&size=12&sort=prix,asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "12" },
+                { "key": "sort", "value": "prix,asc" },
+                { "key": "category", "value": "", "disabled": true },
+                { "key": "minPrice", "value": "", "disabled": true },
+                { "key": "maxPrice", "value": "", "disabled": true },
+                { "key": "sellerId", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Détail produit (id=1)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/1"
+          }
+        },
+        {
+          "name": "GET — Recherche full-text",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/search?q=laptop"
+          }
+        },
+        {
+          "name": "GET — Top ventes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/top-selling"
+          }
+        },
+        {
+          "name": "POST — Créer produit (SELLER)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Laptop Pro 2026\",\n  \"description\": \"Ordinateur haute performance avec 32 Go RAM\",\n  \"prix\": 1499.99,\n  \"prixPromo\": 1299.99,\n  \"stock\": 20,\n  \"actif\": true,\n  \"categoryNames\": [\"Informatique\"],\n  \"images\": [\"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier produit (id=1)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/products/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Laptop Pro 2026 - Édition Limitée\",\n  \"prix\": 1599.99,\n  \"stock\": 15\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE — Désactiver produit (id=1)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/products/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📂 Catégories",
+      "item": [
+        {
+          "name": "GET — Arbre de catégories",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "POST — Créer catégorie (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Informatique\",\n  \"description\": \"Matériel informatique et accessoires\"\n}"
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier catégorie (id=1)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/categories/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"High-Tech\",\n  \"description\": \"Technologie et électronique\"\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer catégorie (id=1)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/categories/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Panier",
+      "item": [
+        {
+          "name": "GET — Mon panier",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/cart"
+          }
+        },
+        {
+          "name": "POST — Ajouter article",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/cart/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"variantId\": null,\n  \"quantity\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier quantité (itemId=1)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/cart/items/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE — Retirer article (itemId=1)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/cart/items/1"
+          }
+        },
+        {
+          "name": "POST — Appliquer coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/cart/coupon",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SUMMER25\"\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE — Retirer coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/cart/coupon"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Commandes",
+      "item": [
+        {
+          "name": "POST — Passer une commande",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingAddressId\": 1,\n  \"paymentSuccess\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "GET — Mes commandes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/orders/my"
+          }
+        },
+        {
+          "name": "GET — Détail commande (id=1)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/orders/1"
+          }
+        },
+        {
+          "name": "GET — Toutes les commandes (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "PUT — Mettre à jour statut (SELLER/ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/orders/1/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SHIPPED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "PUT — Annuler commande (CUSTOMER)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/orders/1/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "⭐ Avis",
+      "item": [
+        {
+          "name": "POST — Poster un avis",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"rating\": 5,\n  \"comment\": \"Excellent produit, livraison rapide !\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET — Avis d'un produit (id=1)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reviews/product/1"
+          }
+        },
+        {
+          "name": "GET — Avis en attente (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/reviews/pending"
+          }
+        },
+        {
+          "name": "PUT — Approuver avis (id=1)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/reviews/1/approve"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Dashboard",
+      "item": [
+        {
+          "name": "GET — Stats Admin",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/dashboard/admin"
+          }
+        },
+        {
+          "name": "GET — Stats Vendeur",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/dashboard/seller"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎟️ Coupons",
+      "item": [
+        {
+          "name": "GET — Tous les coupons (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/coupons"
+          }
+        },
+        {
+          "name": "POST — Créer coupon (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/coupons",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SUMMER25\",\n  \"discountType\": \"PERCENTAGE\",\n  \"value\": 25.0,\n  \"dateExpiration\": \"2026-12-31T23:59:59\",\n  \"usagesMax\": 100,\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "PUT — Modifier coupon (id=1)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/coupons/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SUMMER30\",\n  \"discountType\": \"PERCENTAGE\",\n  \"value\": 30.0,\n  \"usagesMax\": 50,\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer coupon (id=1)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/coupons/1"
+          }
+        },
+        {
+          "name": "GET — Valider coupon par code",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/coupons/validate/SUMMER25"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Utilisateurs",
+      "item": [
+        {
+          "name": "GET — Mon profil",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/users/me"
+          }
+        },
+        {
+          "name": "PUT — Mettre à jour mon profil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/users/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prenom\": \"Alice\",\n  \"nom\": \"Updated\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET — Tous les utilisateurs (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/users"
+          }
+        },
+        {
+          "name": "PATCH — Toggle statut utilisateur (ADMIN, id=2)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/users/2/toggle-status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏠 Adresses",
+      "item": [
+        {
+          "name": "GET — Mes adresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/addresses"
+          }
+        },
+        {
+          "name": "POST — Ajouter adresse",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/addresses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rue\": \"12 Rue de la République\",\n  \"ville\": \"Tunis\",\n  \"codePostal\": \"1000\",\n  \"pays\": \"Tunisie\",\n  \"principal\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer adresse (id=1)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/addresses/1"
+          }
+        }
+      ]
+    }
+  ]
+}

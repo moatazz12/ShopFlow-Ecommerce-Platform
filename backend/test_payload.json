@@ -1,0 +1,7 @@
+{
+  "email": "test@test.com",
+  "password": "Password123",
+  "prenom": "Jean",
+  "nom": "Dupont",
+  "role": "CUSTOMER"
+}
